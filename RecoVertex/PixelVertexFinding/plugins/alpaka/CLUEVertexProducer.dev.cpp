@@ -10,8 +10,11 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/global/EDProducer.h"
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/Event.h"
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/EventSetup.h"
+#include "HeterogeneousCore/AlpakaCore/interface/alpaka/EDPutToken.h"
+#include "HeterogeneousCore/AlpakaCore/interface/alpaka/ESGetToken.h"
+#include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 
-#include "FWCore/Framework/interface/MakerMacros.h"
+#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
@@ -29,10 +32,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       ptMin_(conf.getParameter<double>("PtMin")),
       method2(conf.getParameter<bool>("Method2")),
       trackCollName(conf.getParameter<edm::InputTag>("TrackCollection")),
-      token_Tracks(consumes<reco::TrackCollection>(trackCollName)),
-      token_BeamSpot(consumes<reco::BeamSpot>(conf.getParameter<edm::InputTag>("beamSpot"))) {
+      token_Tracks(consumes(trackCollName)),
+      token_BeamSpot(consumes(conf.getParameter<edm::InputTag>("beamSpot"))),
+      token_RecoVertex(produces()) {
   // Register my product
-  produces<reco::VertexCollection>();
 
   // Setup shop
   std::string finder = conf.getParameter<std::string>("Finder");  // DivisiveVertexFinder
@@ -47,26 +50,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   double track_pt_max = 10.;
   double track_chi2_max = 9999999.;
   double track_prob_min = -1.;
-
+  std::cout << track_pt_min << " " << track_pt_max << " " << track_chi2_max << " " << track_prob_min << "\n";
   if (conf.exists("PVcomparer")) {
     edm::ParameterSet PVcomparerPSet = conf.getParameter<edm::ParameterSet>("PVcomparer");
     track_pt_min = PVcomparerPSet.getParameter<double>("track_pt_min");
-    if (track_pt_min != ptMin_) {
-      if (track_pt_min < ptMin_)
-        edm::LogInfo("PixelVertexProducer")
-            << "minimum track pT setting differs between PixelVertexProducer (" << ptMin_ << ") and PVcomparer ("
-            << track_pt_min << ") [PVcomparer considers tracks w/ lower threshold than PixelVertexProducer does] !!!";
-      else
-        edm::LogInfo("PixelVertexProducer") << "minimum track pT setting differs between PixelVertexProducer ("
-                                            << ptMin_ << ") and PVcomparer (" << track_pt_min << ") !!!";
-    }
     track_pt_max = PVcomparerPSet.getParameter<double>("track_pt_max");
     track_chi2_max = PVcomparerPSet.getParameter<double>("track_chi2_max");
     track_prob_min = PVcomparerPSet.getParameter<double>("track_prob_min");
   }
 
   }
-    void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
 
   edm::ParameterSetDescription desc;
@@ -147,8 +141,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 }
     void produce(edm::StreamID sid, device::Event& event, device::EventSetup const&) const override {
 	
-      edm::Handle<reco::BeamSpot> bsHandle;
-      event.getByToken(token_BeamSpot, bsHandle);
+      //edm::Handle<reco::BeamSpot> bsHandle;
+      const auto& bsHandle = event.get(token_BeamSpot);
       std::cout << "Pippo \n";
       /*std::vector<int> results(2 * n_points);
        
@@ -228,7 +222,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 	  //v.add( need to add points of cluster with seed s );
         }
       }*/
-      event.put(std::move(vertexes));      
+
+      // event.put(std::move(vertexes));      
     } 
   private:
 
@@ -239,9 +234,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   const double ptMin_;
   const bool method2;
   const edm::InputTag trackCollName;
-  const edm::EDGetTokenT<reco::TrackCollection> token_Tracks;
-  const edm::EDGetTokenT<reco::BeamSpot> token_BeamSpot;
-
+  const device::EDGetToken<reco::TrackCollection> token_Tracks;
+  const device::EDGetToken<reco::BeamSpot> token_BeamSpot;
+  const device::EDPutToken<reco::VertexCollection> token_RecoVertex;
     // Parameters for CLUEAlgoAlpaka
     float m_dc{1.5f}; // Side length of box to calculate density
     float m_rhoc{10.f}; // Minimum energy density to NOT be an outlier 
@@ -250,4 +245,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     bool m_wtAvg{true}; // Decides how to copute error
   };
 }
-  DEFINE_FWK_MODULE(CLUEVertexProducer);
+
+#include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
+  DEFINE_FWK_ALPAKA_MODULE(CLUEVertexProducer);
