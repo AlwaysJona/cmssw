@@ -7,9 +7,9 @@
 #include <iostream>
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "HeterogeneusCore/AlpakaCore/interface/global/EDProducer.h"
-#include "HeterogeneusCore/AlpakaCore/interface/Event.h"
-#include "HeterogeneusCore/AlpakaCore/interface/EventSetup.h"
+#include "HeterogeneousCore/AlpakaCore/interface/alpaka/global/EDProducer.h"
+#include "HeterogeneousCore/AlpakaCore/interface/alpaka/Event.h"
+#include "HeterogeneousCore/AlpakaCore/interface/alpaka/EventSetup.h"
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -23,7 +23,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class CLUEVertexProducer : public global::EDProducer<> {
   public: 
-    CLUEVertexProducer(edm::ParameterSet const& config)
+    CLUEVertexProducer(edm::ParameterSet const& conf)
 	: verbose_(conf.getParameter<int>("Verbosity")),
       // 1.0 GeV
       ptMin_(conf.getParameter<double>("PtMin")),
@@ -248,6 +248,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     float m_dm{1.5f}; // Side length of box to search for followers
     int m_pPBin{128}; // Average number of points found in a tile
     bool m_wtAvg{true}; // Decides how to copute error
-  }
+  };
 }
   DEFINE_FWK_MODULE(CLUEVertexProducer);
