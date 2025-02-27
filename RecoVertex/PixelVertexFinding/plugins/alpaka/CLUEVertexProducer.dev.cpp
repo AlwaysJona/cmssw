@@ -7,17 +7,17 @@
 #include <iostream>
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/stream/EDProducer.h"
-#include "FWCore/Framework/interface/Event.h"
-#include "FWCore/Framework/interface/EventSetup.h"
-#include "FWCore/Framework/interface/MakerMacros.h"
+#include "HeterogeneusCore/AlpakaCore/interface/global/EDProducer.h"
+#include "HeterogeneusCore/AlpakaCore/interface/Event.h"
+#include "HeterogeneusCore/AlpakaCore/interface/EventSetup.h"
 
+#include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/Math/interface/Error.h"
 
-#include "CLUEstering/CLUEstering.hpp"
+// #include "CLUEstering/CLUEstering.hpp"
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
@@ -65,7 +65,86 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     track_prob_min = PVcomparerPSet.getParameter<double>("track_prob_min");
   }
 
-  } 
+  }
+    void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+
+
+  edm::ParameterSetDescription desc;
+
+
+  desc.add<int>("Verbosity", 0);
+
+
+  desc.add<double>("PtMin", 1.0);
+
+
+  desc.add<bool>("Method2", true);
+
+
+  desc.add<edm::InputTag>("TrackCollection", edm::InputTag("pixelTracks"));
+
+
+  desc.add<edm::InputTag>("beamSpot", edm::InputTag("offlineBeamSpot"));
+
+
+  desc.add<std::string>("Finder", "DivisiveVertexFinder");
+
+
+  desc.add<bool>("UseError", true);
+
+
+  desc.add<bool>("WtAverage", true);
+
+
+  desc.add<double>("ZOffset", 5.0);
+
+
+  desc.add<double>("ZSeparation", 0.05);
+
+
+  desc.add<int>("NTrkMin", 2);
+
+
+
+
+
+  {
+
+
+    edm::ParameterSetDescription PVComparerPSet;
+
+
+    PVComparerPSet.add<double>("track_pt_min", 1.0);
+
+
+    PVComparerPSet.add<double>("track_pt_max", 10.0);
+
+
+    PVComparerPSet.add<double>("track_chi2_max", 999999.);
+
+
+    PVComparerPSet.add<double>("track_prob_min", -1.);
+
+
+    desc.addOptional<edm::ParameterSetDescription>("PVcomparer", PVComparerPSet);
+
+
+  }
+
+
+
+
+
+  // check label
+
+
+  //descriptions.addWithDefaultLabel(desc);
+
+
+  descriptions.add("clueVertices", desc);
+
+
+}
     void produce(edm::StreamID sid, device::Event& event, device::EventSetup const&) const override {
 	
       edm::Handle<reco::BeamSpot> bsHandle;
@@ -170,5 +249,5 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     int m_pPBin{128}; // Average number of points found in a tile
     bool m_wtAvg{true}; // Decides how to copute error
   }
-
+}
   DEFINE_FWK_MODULE(CLUEVertexProducer);
