@@ -20,12 +20,18 @@
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/Math/interface/Error.h"
 
+#include "DataFormats/TrackSoA/interface/alpaka/TracksSoACollection.h"
+#include "DataFormats/TrackSoA/interface/TracksDevice.h"
+#include "DataFormats/VertexSoA/interface/alpaka/ZVertexSoACollection.h"
+#include "DataFormats/VertexSoA/interface/ZVertexDevice.h"
+
 // #include "CLUEstering/CLUEstering.hpp"
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class CLUEVertexProducer : public global::EDProducer<> {
-  public: 
+   using TkSoADevice = TracksSoACollection<pixelTopology::Phase1>;
+   public: 
     CLUEVertexProducer(edm::ParameterSet const& conf)
 	: verbose_(conf.getParameter<int>("Verbosity")),
       // 1.0 GeV
@@ -33,7 +39,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       method2(conf.getParameter<bool>("Method2")),
       trackCollName(conf.getParameter<edm::InputTag>("TrackCollection")),
       token_Tracks(consumes(trackCollName)),
-      token_BeamSpot(consumes(conf.getParameter<edm::InputTag>("beamSpot"))),
+      //token_BeamSpot(consumes(conf.getParameter<edm::InputTag>("beamSpot"))),
       token_RecoVertex(produces()) {
   // Register my product
 
@@ -132,17 +138,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   // check label
 
 
-  //descriptions.addWithDefaultLabel(desc);
+  descriptions.addWithDefaultLabel(desc);
 
 
-  descriptions.add("clueVertices", desc);
+  //descriptions.add("clueVertices", desc);
 
 
 }
     void produce(edm::StreamID sid, device::Event& event, device::EventSetup const&) const override {
 	
       //edm::Handle<reco::BeamSpot> bsHandle;
-      const auto& bsHandle = event.get(token_BeamSpot);
+      //const auto& bsHandle = event.get(token_BeamSpot);
       std::cout << "Pippo \n";
       /*std::vector<int> results(2 * n_points);
        
@@ -234,9 +240,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   const double ptMin_;
   const bool method2;
   const edm::InputTag trackCollName;
-  const device::EDGetToken<reco::TrackCollection> token_Tracks;
-  const device::EDGetToken<reco::BeamSpot> token_BeamSpot;
-  const device::EDPutToken<reco::VertexCollection> token_RecoVertex;
+  const device::EDGetToken<TkSoADevice> token_Tracks;
+  // const device::EDGetToken<reco::BeamSpot> token_BeamSpot;
+  const device::EDPutToken<ZVertexSoACollection> token_RecoVertex;
     // Parameters for CLUEAlgoAlpaka
     float m_dc{1.5f}; // Side length of box to calculate density
     float m_rhoc{10.f}; // Minimum energy density to NOT be an outlier 
