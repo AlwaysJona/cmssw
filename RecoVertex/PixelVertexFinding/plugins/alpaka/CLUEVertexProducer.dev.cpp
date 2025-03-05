@@ -147,9 +147,22 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 }
     void produce(edm::StreamID sid, device::Event& event, device::EventSetup const&) const override {
 	
-      //edm::Handle<reco::BeamSpot> bsHandle;
-      //const auto& bsHandle = event.get(token_BeamSpot);
+      // edm::Handle<reco::BeamSpot> bsHandle;
+      // const auto& bsHandle = event.get(token_BeamSpot);
       std::cout << "Pippo \n";
+      // Putting empty vertex into the event as a first step
+      auto vertexes = std::make_unique<reco::VertexCollection>();
+      
+      AlgebraicSymMatrix33 we;
+      we(0,0) = 10000;
+      we(1,1) = 10000;
+      we(2,2) = 10000;
+
+      // auto vertices = std::make_unique<ZVertexSoACollection>({{10,10}}, event.queue());
+      
+      ZVertexSoACollection vertices({{10,10}}, event.queue());
+
+      event.emplace(token_RecoVertex, {{10,10}}, event.queue());
       /*std::vector<int> results(2 * n_points);
        
       const auto dev_acc = alpaka::getDevByIdx(alpaka::Platform<Acc1D>{}, 0u);
