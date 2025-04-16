@@ -163,6 +163,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       // To run CLUEAlgoAlpaka<dim>::make_clusters() I need PointsSoA<dim>
       
+      // auto tracks_h = cms::alpakatools::CopyToHost<TkSoADevice>::copyAsync(queue, tracks);
+
       std::vector<float> coords;
       std::vector<int> results(nTracks);
       for (auto idx = 0u; idx < nTracks; ++idx) {
