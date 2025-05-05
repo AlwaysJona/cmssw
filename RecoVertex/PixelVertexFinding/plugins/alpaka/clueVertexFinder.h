@@ -1,3 +1,6 @@
+#ifndef RecoVertex_PixleVertexFinding_plugins_alpaka_clueVertexFinder_h
+#define RecoVertex_PixleVertexFinding_plugins_alpaka_clueVertexFinder_h
+
 #include <alpaka/alpaka.hpp>
 #include <algorithm>
 #include <chrono>
@@ -26,36 +29,37 @@
 #include "DataFormats/VertexSoA/interface/alpaka/ZVertexSoACollection.h"
 #include "DataFormats/VertexSoA/interface/ZVertexDevice.h"
 
+#include "./CLUE/include/CLUEstering/CLUEstering.hpp"
+
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
+  namespace clueVertexFinder {
+     template <int dim, typename TrackerTraits>
+     class Producer {
 
-   template <typename TrackerTraits>
-   class Producer {
-
-   public:
-     Producer(float dc,
-              float rhoc,
-              float dm,
-              int PBin,
-              bool wtAvg,
-              )
-         : m_dc(dc),
-           m_rhoc(rhoc),
-           m_dm(dm),
-           m_PBin(PBin),
-           m_wtAvg(wtAvg) {}
+     public:
+       Producer(float dc,
+                float rhoc,
+                float dm,
+                int pPBin,
+                bool wtAvg)
+           : m_dc(dc),
+             m_rhoc(rhoc),
+             m_dm(dm),
+             m_pPBin(pPBin),
+             m_wtAvg(wtAvg) {}
      
-     ~Producer() = default;
+       ~Producer() = default;
 
-     // need to figure out what the return type is
-     auto makeClusters (PointsHost& h_points, PointsDevice& d_points, Queue& queue);
+       void makeClusters (clue::PointsHost<dim>& h_points, clue::PointsDevice<dim, Device>& d_points, Queue& queue);
 
-   private: 
-     float m_dc;
-     float m_rhoc;
-     float m_dm;
-     int m_PBin;
-     bool wtAvg;
- };
-
+     private: 
+       float m_dc;
+       float m_rhoc;
+       float m_dm;
+       int m_pPBin;
+       bool m_wtAvg;
+    };
+  } // namespace clueVertexFinder
 } // namespace ALPAKA_ACCELERATOR_NAMESPACE
 
+#endif
