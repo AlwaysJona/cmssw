@@ -179,7 +179,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       clue::PointsHost<1> h_points(queue, nTracks, coords, results);
       clue::PointsDevice<1, Device> d_points(queue, nTracks);
 
-      clueVertexFinder::Producer<1, pixelTopology::Phase1> clusterer (m_dc, m_rhoc, m_dm, m_pPBin, m_wtAvg);
+      clueVertexFinder::Producer clusterer(m_dc, m_rhoc, m_dm, m_pPBin, m_wtAvg);
       clusterer.makeClusters(h_points, d_points, queue);
 
       auto my_clusters = std::span<const int>{results.data(), nTracks};

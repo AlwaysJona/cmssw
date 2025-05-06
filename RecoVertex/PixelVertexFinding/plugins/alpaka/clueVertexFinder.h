@@ -33,7 +33,6 @@
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
   namespace clueVertexFinder {
-     template <int dim, typename TrackerTraits>
      class Producer {
 
      public:
@@ -50,7 +49,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
      
        ~Producer() = default;
 
-       void makeClusters (clue::PointsHost<dim>& h_points, clue::PointsDevice<dim, Device>& d_points, Queue& queue);
+       void makeClusters (clue::PointsHost<1>& h_points, clue::PointsDevice<1, Device>& d_points, Queue& queue);
 
      private: 
        float m_dc;
