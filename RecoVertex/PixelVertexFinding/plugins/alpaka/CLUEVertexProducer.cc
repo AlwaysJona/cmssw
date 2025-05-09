@@ -26,7 +26,6 @@
 #include "DataFormats/VertexSoA/interface/alpaka/ZVertexSoACollection.h"
 #include "DataFormats/VertexSoA/interface/ZVertexDevice.h"
 
-#include "./CLUE/include/CLUEstering/CLUEstering.hpp"
 #include "./clueVertexFinder.h"
 
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
@@ -164,8 +163,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       auto data = vertices.view();
       auto trkdata = vertices.view<reco::ZVertexTracksSoA>();
 
-      // To run CLUEAlgoAlpaka<dim>::make_clusters() I need PointsSoA<dim>
-      
       // Copying from device to host
       TracksHost<pixelTopology::Phase1> tracks_h(queue);
       alpaka::memcpy(queue, tracks_h.buffer(), tracks_d.buffer()); 
@@ -175,12 +172,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       for (auto idx = 0u; idx < nTracks; ++idx) {
         coords.push_back(reco::zip(tracks_h.view(), idx));
       }
-
+/*
       clue::PointsHost<1> h_points(queue, nTracks, coords, results);
       clue::PointsDevice<1, Device> d_points(queue, nTracks);
 
       clueVertexFinder::Producer clusterer(m_dc, m_rhoc, m_dm, m_pPBin, m_wtAvg);
       clusterer.makeClusters(h_points, d_points, queue);
+*/
+
+      clueVertexFinder::Producer clusterer(m_dc, m_rhoc, m_dm, m_pPBin, m_wtAvg);
+      clusterer.makeClusters(coords, results, queue);
 
       auto my_clusters = std::span<const int>{results.data(), nTracks};
       auto isSeed = std::span<const int>(results.data() + nTracks, nTracks);
