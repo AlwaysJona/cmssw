@@ -127,27 +127,38 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       const uint32_t nTracks = tracks_d_view.nTracks();
 
       ZVertexSoACollection vertices({{maxVertices, maxTracks}}, queue);
+      std::cout << __LINE__ << std::endl;
       auto data = vertices.view();
       auto trkdata = vertices.view<reco::ZVertexTracksSoA>();  // access the data in the ZVertexTracksSoA Layout
       auto vrtxdata = vertices.view<reco::ZVertexSoA>();       // access the data in the ZVertexSoA Layout
       // Copying from device to host
       TracksHost<pixelTopology::Phase2> tracks_h(queue);
+      std::cout << __LINE__ << std::endl;
       alpaka::memcpy(queue, tracks_h.buffer(), tracks_d.buffer());
 
+      std::cout << __LINE__ << std::endl;
       std::vector<float> coords;
       std::vector<int> results(nTracks);
       for (auto idx = 0u; idx < nTracks; ++idx) {
         coords.push_back(reco::zip(tracks_h.view(), idx));
       }
-
+      std::cout << __LINE__ << std::endl;
       clueVertexFinder::Producer clusterer(m_dc, m_rhoc, m_dm, m_pPBin, m_wtAvg);
+      std::cout << __LINE__ << std::endl;
       clusterer.makeClusters(coords, results, queue);
+      std::cout << __LINE__ << std::endl;
 
       auto my_clusters = std::span<const int>{results.data(), nTracks};
+      std::cout << __LINE__ << std::endl;
       auto isSeed = std::span<const int>(results.data() + nTracks, nTracks);
+      std::cout << __LINE__ << std::endl;
 
       int nClusters = *(std::max_element(my_clusters.begin(), my_clusters.end())) + 1;
+
+      std::cout << __LINE__ << std::endl;
+
       std::vector<int> clusterCount(nClusters);  // need this to calculate averages later
+      std::cout << __LINE__ << std::endl;
       /* ZVertexSoACollection is made of a ZVertexSoA and a ZVertexTracksSoA
       // ZvertexSoA is made of:
       //               SOA_COLUMN(float, zv),          // output z-posistion of found vertices
@@ -171,19 +182,19 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       // I will need this to compute chi2 of each vertex
       std::for_each(my_clusters.begin(), my_clusters.end(), [&clusterCount](int idx) { clusterCount[idx]++; });
+      
+      std::cout << __LINE__ << std::endl;
+      
       vrtxdata.nvFinal() = nClusters;
 
+      
+      std::cout << __LINE__ << std::endl;
       // Preparing to launch kernels
 
       /*using Acc = alpaka::ExampleDefaultAcc<1u, std::size_t>;
-      auto devAcc = alpaka::getDevByIdx<Acc>(0u);
-
-      std::size_t elemPerThread(16u);
-
-      alpaka::WorkDivMembers<1u, std::size_t> const workDiv(alpaka::getValidWorkDiv<Acc>(
-          devAcc, nTracks, elemPerThread, false, alpaka::GridBlockExtentSubDiviRestrictions::Unrestricted));
-      auto const devHost = alpaka::getDevByIdx<alpaka::DevCpu>(0u);
-      */
+      using DimInt = alpaka::DimInt<1>;
+      using Idx = std::size_t;
+      using DevAcc = alpaka::Dev<Acc>;*/
       /*
       for (auto i = 0u; i < nTracks; ++i) {
         if (isSeed[i]) {
