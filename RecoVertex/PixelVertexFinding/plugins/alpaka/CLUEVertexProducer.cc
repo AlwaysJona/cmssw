@@ -172,10 +172,19 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       // I will need this to compute chi2 of each vertex
       std::for_each(my_clusters.begin(), my_clusters.end(), [&clusterCount](int idx) { clusterCount[idx]++; });
       vrtxdata.nvFinal() = nClusters;
-      float chi2 = 0;
 
-      std::vector<float> zAcc(nClusters);
+      // Preparing to launch kernels
 
+      /*using Acc = alpaka::ExampleDefaultAcc<1u, std::size_t>;
+      auto devAcc = alpaka::getDevByIdx<Acc>(0u);
+
+      std::size_t elemPerThread(16u);
+
+      alpaka::WorkDivMembers<1u, std::size_t> const workDiv(alpaka::getValidWorkDiv<Acc>(
+          devAcc, nTracks, elemPerThread, false, alpaka::GridBlockExtentSubDiviRestrictions::Unrestricted));
+      auto const devHost = alpaka::getDevByIdx<alpaka::DevCpu>(0u);
+      */
+      /*
       for (auto i = 0u; i < nTracks; ++i) {
         if (isSeed[i]) {
           vrtxdata[my_clusters[i]].zv() = coords[i];
@@ -186,6 +195,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
 
       event.emplace(token_RecoVertex, std::move(vertices));
+      */
 
       /* 
 
