@@ -31,7 +31,7 @@
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class CLUEVertexProducer : public global::EDProducer<> {
-    using TkSoADevice = TracksSoACollection<pixelTopology::Phase1>;
+    using TkSoADevice = TracksSoACollection<pixelTopology::Phase2>;
 
   public:
     CLUEVertexProducer(edm::ParameterSet const& conf)
@@ -135,7 +135,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       auto vrtxdata = vertices.view<reco::ZVertexSoA>();       // access the data in the ZVertexSoA Layout
       std::cout << __LINE__ << std::endl;
       // Copying from device to host
-      TracksHost<pixelTopology::Phase1> tracks_h(queue);
+      TracksHost<pixelTopology::Phase2> tracks_h(queue);
       alpaka::memcpy(queue, tracks_h.buffer(), tracks_d.buffer());
 
       std::cout << __LINE__ << std::endl;
