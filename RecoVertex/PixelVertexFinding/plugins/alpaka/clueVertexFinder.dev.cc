@@ -6,7 +6,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     //
     void Producer::makeClusters(std::vector<float>& coords, std::vector<int>& results, Queue& queue) {
       std::cout << "clueVertexFinder line: " << __LINE__ << std::endl;
-      int nTracks = results.size();
+      int nTracks = results.size()/2;
       std::cout << "clueVertexFinder line: " << __LINE__ << std::endl;
       clue::PointsHost<1> h_points(queue, nTracks, coords, results); // zv pt clidx isSeed, need to use another overload, not the one
                                                                      // I used here:

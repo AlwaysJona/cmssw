@@ -31,7 +31,8 @@
 namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class CLUEVertexProducer : public global::EDProducer<> {
-     using TkSoADevice = TracksSoACollection<pixelTopology::Phase2>;
+    using TkSoADevice = TracksSoACollection<pixelTopology::Phase2>;
+
   public:
     CLUEVertexProducer(edm::ParameterSet const& conf)
         : EDProducer(conf),
@@ -126,41 +127,49 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       const auto maxTracks = tracks_d_view.metadata().size();
       std::cout << "maxTracks = " << maxTracks << std::endl;
       std::cout << __LINE__ << std::endl;
-      //const uint32_t nTracks; // SEG FAULT HERE; cannot access nTracks since 
-                                                           // it's data allocated in device 
-                                                           // will need to use this in the kernel
+      //const uint32_t nTracks; // SEG FAULT HERE; cannot access nTracks since
+      // it's data allocated in device
+      // will need to use this in the kernel
       /*TkSoAHost host_tracks; 
       alpaka::memcpy(queue, host_tracks, tracks_d);*/
-      
+
       TracksHost<pixelTopology::Phase2> tracks_h(queue);  // in the host
       alpaka::memcpy(queue, tracks_h.buffer(), tracks_d.buffer());
       alpaka::wait(queue);
       std::cout << __LINE__ << std::endl;
       const uint32_t nTracks = tracks_h.view().nTracks();
-      
+
       std::cout << "nTracks = " << nTracks << std::endl;
       //const uint32_t nTracks = maxTracks;  // placeholder
       std::cout << __LINE__ << std::endl;
 
-      ZVertexSoACollection vertices({{maxVertices, maxTracks}}, queue); // this object is in the device
+      ZVertexSoACollection vertices({{maxVertices, maxTracks}}, queue);  // this object is in the device
       std::cout << __LINE__ << std::endl;
       auto data = vertices.view();
       auto trkdata = vertices.view<reco::ZVertexTracksSoA>();  // access the data in the ZVertexTracksSoA Layout
       auto vrtxdata = vertices.view<reco::ZVertexSoA>();       // access the data in the ZVertexSoA Layout
       std::cout << __LINE__ << std::endl;
 
-      std::vector<float> coords;
-      std::vector<int> results(2*nTracks);
-      
+      std::vector<float> coords(2 * nTracks);
+      std::vector<int> results(2 * nTracks);
+
       for (auto idx = 0u; idx < nTracks; ++idx) {
-        coords.push_back(reco::zip(tracks_h.view(), idx));
-        if(idx < 10)
-           std::cout << "coords[" << idx << "] = " << coords[idx] << std::endl;
-      }
-      for (auto idx = 0u; idx < nTracks; ++idx) {
+        auto pt = (tracks_h.view().pt())[idx]; // instead of [idx] I was doing [idx + nTracks], but it never went into seg fault
+        if (pt >= ptMin_) {
+          coords.at(idx) = reco::zip(tracks_h.view(), idx);
+          coords.at(idx + nTracks) = pt;
+          //coords.push_back(reco::zip(tracks_h.view(), idx));
+          // TO DO: I need to save the pt idx + nTracks ahead, and not push_back
+          //coords.push_back((tracks_h.view().pt())[idx + nTracks]);  // also need to save the pt's
+          if (idx < 10) {
+            std::cout << "coords[" << idx << "] = " << coords[idx] << std::endl;
+            std::cout << "coords[nTracks + " << idx << "] = " << coords[idx + nTracks] << std::endl;
+          }
+        }
+        /*for (auto idx = 0u; idx < nTracks; ++idx) {
         coords.push_back((tracks_h.view().pt())[idx + nTracks]); // also need to save the pt's
         if(idx < 10)   
-           std::cout << "coords[nTracks + " << idx << "] = " << coords[idx + nTracks] << std::endl;
+           std::cout << "coords[nTracks + " << idx << "] = " << coords[idx + nTracks] << std::endl;*/
       }
       std::cout << "coords.size() and results.size() = " << coords.size() << " " << results.size() << std::endl;
       std::cout << __LINE__ << std::endl;
@@ -170,7 +179,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       std::cout << __LINE__ << std::endl;
       auto myClusters = std::span<const int>{results.data(), nTracks};
       auto isSeed = std::span<const int>(results.data() + nTracks, nTracks);
-        
+
       std::cout << "myClusters.size() = " << myClusters.size() << " and isSeed.size() = " << isSeed.size() << std::endl;
 
       std::cout << __LINE__ << std::endl;
@@ -201,9 +210,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       // I will need this to compute chi2 of each vertex
       // std::for_each(myClusters.begin(), myClusters.end(), [&clusterCount](int idx) { clusterCount[idx]++; }); // SEG FAULT HERE
-      
+
       std::cout << __LINE__ << std::endl;
-      
+
       // vrtxdata.nvFinal() = nClusters; // SEG fault here, understandable: I'm trying to modify data in the device from the host
 
       std::cout << __LINE__ << std::endl;
@@ -289,10 +298,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // Parameters for CLUEAlgoAlpaka
     float m_dc{0.2f};    // Side length of box to calculate density
     float m_rhoc{10.f};  // Minimum energy density to NOT be an outlier
-    float m_dm{0.75f};    // Side length of box to search for followers
+    float m_dm{0.75f};   // Side length of box to search for followers
     int m_pPBin{128};    // Average number of points found in a tile
     bool m_wtAvg{true};  // Decides how to copute error
   };
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE
 
-    DEFINE_FWK_ALPAKA_MODULE(CLUEVertexProducer);
+DEFINE_FWK_ALPAKA_MODULE(CLUEVertexProducer);
