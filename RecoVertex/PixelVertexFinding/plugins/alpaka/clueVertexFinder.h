@@ -45,7 +45,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       //void makeClusters (clue::PointsHost<1>& h_points, clue::PointsDevice<1, Device>& d_points, Queue& queue);
 
       // trying different approach by creating the clue::Points here
-      void makeClusters(std::vector<float>& coords, std::vector<int>& results, Queue& queue);
+      void makeClusters(std::vector<float>& coords, std::vector<int>& results, Queue& queue, size_t& nTracks);
 
     private:
       float m_dc;

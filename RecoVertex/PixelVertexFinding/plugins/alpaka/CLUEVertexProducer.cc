@@ -150,43 +150,52 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       auto vrtxdata = vertices.view<reco::ZVertexSoA>();       // access the data in the ZVertexSoA Layout
       std::cout << __LINE__ << std::endl;
 
-      std::vector<float> coords(2 * nTracks);
-      std::vector<int> results(2 * nTracks);
+      std::vector<float> coords;
+      std::vector<float> pts;
 
+      // TO DO: fill the coords vector appropriately
+      int it = 0;
       for (auto idx = 0u; idx < nTracks; ++idx) {
-        auto pt = (tracks_h.view().pt())[idx]; // instead of [idx] I was doing [idx + nTracks], but it never went into seg fault
+        auto pt = (tracks_h.view()
+                       .pt())[idx];  // instead of [idx] I was doing [idx + nTracks], but it never went into seg fault
         if (pt >= ptMin_) {
-          coords.at(idx) = reco::zip(tracks_h.view(), idx);
-          coords.at(idx + nTracks) = pt;
-          //coords.push_back(reco::zip(tracks_h.view(), idx));
-          // TO DO: I need to save the pt idx + nTracks ahead, and not push_back
-          //coords.push_back((tracks_h.view().pt())[idx + nTracks]);  // also need to save the pt's
+          coords.push_back(reco::zip(tracks_h.view(), idx));
+          pts.push_back(pt);
+          /*coords.at(it) = reco::zip(tracks_h.view(), idx);
+          coords.at(it + nTracks) = pt;*/
           if (idx < 10) {
-            std::cout << "coords[" << idx << "] = " << coords[idx] << std::endl;
-            std::cout << "coords[nTracks + " << idx << "] = " << coords[idx + nTracks] << std::endl;
+            std::cout << "coords[" << idx - it << "] = " << coords[idx - it] << std::endl;
+            std::cout << "pts[ " << idx - it << "] = " << pts[idx - it] << std::endl;
           }
-        }
-        /*for (auto idx = 0u; idx < nTracks; ++idx) {
-        coords.push_back((tracks_h.view().pt())[idx + nTracks]); // also need to save the pt's
-        if(idx < 10)   
-           std::cout << "coords[nTracks + " << idx << "] = " << coords[idx + nTracks] << std::endl;*/
+        } else
+          it++;
       }
-      std::cout << "coords.size() and results.size() = " << coords.size() << " " << results.size() << std::endl;
-      std::cout << __LINE__ << std::endl;
-      clueVertexFinder::Producer clusterer(m_dc, m_rhoc, m_dm, m_pPBin, m_wtAvg);
-      clusterer.makeClusters(coords, results, queue);
 
-      std::cout << __LINE__ << std::endl;
-      auto myClusters = std::span<const int>{results.data(), nTracks};
-      auto isSeed = std::span<const int>(results.data() + nTracks, nTracks);
+      size_t trueTracks = nTracks - it;
+      std::vector<int> results(2 * trueTracks);
+      if (trueTracks != 0) {
+        coords.insert(coords.end(), pts.begin(), pts.end());
 
-      std::cout << "myClusters.size() = " << myClusters.size() << " and isSeed.size() = " << isSeed.size() << std::endl;
+        std::cout << "coords.size() and results.size() = " << coords.size() << " " << results.size() << std::endl;
+        std::cout << __LINE__ << std::endl;
+        clueVertexFinder::Producer clusterer(m_dc, m_rhoc, m_dm, m_pPBin, m_wtAvg);
+        clusterer.makeClusters(coords, results, queue, trueTracks);
 
-      std::cout << __LINE__ << std::endl;
-      int nClusters = *(std::max_element(myClusters.begin(), myClusters.end())) + 1;
-      std::cout << "nClusters = " << nClusters << std::endl;
-      std::vector<int> clusterCount(nClusters);  // need this to calculate averages later
-      std::cout << __LINE__ << std::endl;
+        std::cout << __LINE__ << std::endl;
+        auto myClusters = std::span<const int>{results.data(), trueTracks};
+        auto isSeed = std::span<const int>(results.data() + nTracks, trueTracks);
+
+        std::cout << "myClusters.size() = " << myClusters.size() << " and isSeed.size() = " << isSeed.size()
+                  << std::endl;
+
+        std::cout << __LINE__ << std::endl;
+        int nClusters = *(std::max_element(myClusters.begin(), myClusters.end())) + 1;
+        std::cout << "nClusters = " << nClusters << std::endl;
+        std::vector<int> clusterCount(nClusters);  // need this to calculate averages later
+        std::cout << __LINE__ << std::endl;
+      } else {
+        std::cout << "No tracks have pt greater than ptMin_ \n";
+      }
       /* ZVertexSoACollection is made of a ZVertexSoA and a ZVertexTracksSoA
       // ZvertexSoA is made of:
       //               SOA_COLUMN(float, zv),          // output z-posistion of found vertices
