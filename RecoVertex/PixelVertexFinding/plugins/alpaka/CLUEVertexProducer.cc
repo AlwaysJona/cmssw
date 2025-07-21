@@ -154,7 +154,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       std::vector<float> pts;
 
       // TO DO: fill the coords vector appropriately
-      int it = 0;
       for (auto idx = 0u; idx < nTracks; ++idx) {
         auto pt = (tracks_h.view()
                        .pt())[idx];  // instead of [idx] I was doing [idx + nTracks], but it never went into seg fault
@@ -164,14 +163,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           /*coords.at(it) = reco::zip(tracks_h.view(), idx);
           coords.at(it + nTracks) = pt;*/
           if (idx < 10) {
-            std::cout << "coords[" << idx - it << "] = " << coords[idx - it] << std::endl;
-            std::cout << "pts[ " << idx - it << "] = " << pts[idx - it] << std::endl;
+            std::cout << "coords[" << idx << "] = " << coords[idx] << std::endl;
+            std::cout << "pts[ " << idx << "] = " << pts[idx] << std::endl;
           }
-        } else
-          it++;
+        }
       }
 
-      size_t trueTracks = nTracks - it;
+      size_t trueTracks = coords.size();
       std::vector<int> results(2 * trueTracks);
       if (trueTracks != 0) {
         coords.insert(coords.end(), pts.begin(), pts.end());
