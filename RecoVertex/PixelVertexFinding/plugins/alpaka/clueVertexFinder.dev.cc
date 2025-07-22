@@ -1,4 +1,5 @@
 #include <alpaka/alpaka.hpp>
+#include <cstdio>
 
 #include "DataFormats/TrackSoA/interface/alpaka/TrackUtilities.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
@@ -39,6 +40,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                     TracksSoACollection<pixelTopology::Phase2>::ConstView tracks_view,
                                     ::vertexFinder::PixelVertexWorkSpaceSoAView ws,
                                     float ptMin) const {
+        printf("clueVertexFinder.dev.cc: Before the for loop in the LoadTracks kernel \n");
         for (auto idx : cms::alpakatools::uniform_elements(acc, tracks_view.nTracks())) {
           auto pt = tracks_view[idx].pt();
           if (pt < ptMin)
@@ -48,8 +50,30 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           ws[it].zt() = reco::zip(tracks_view, idx);
           ws[it].ptt2() = pt * pt;
         }
+        printf("clueVertexFinder.dev.cc: After the for loop in the LoadTracks kernel \n");
       }
-    };
+    };  // LoadTracks
+
+    // void for now, since I'm not returning anything yet
+    /*ZVertexSoACollection*/ void Producer::makeAsync(
+        Queue& queue,
+        TracksSoACollection<pixelTopology::Phase2>::ConstView const& tracks_view,
+        int maxVertices,
+        float ptMin) const {
+      const auto maxTracks = tracks_view.metadata().size();
+      vertexFinder::PixelVertexWorkSpaceSoADevice workspace(maxTracks, queue);
+      std::cout << "clueVertexFinder.dev.cc: Created Workspace \n";
+      auto ws = workspace.view();
+
+      //TO DO: Initialize?
+
+      //Load Tracks
+      const uint32_t blockSize = 128;
+      const uint32_t numberOfBlocks = cms::alpakatools::divide_up_by(maxTracks + blockSize - 1, blockSize);
+      const auto loadTracksWorkDiv = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
+      alpaka::exec<Acc1D>(queue, loadTracksWorkDiv, LoadTracks{}, tracks_view, ws, ptMin);
+      std::cout << "clueVertexFinder.dev.cc: Loaded the tracks into the workspace \n";
+    }
 
     // Kernel to compute parameters of the verteces and the tracks
     /*template <typename TAcc>
