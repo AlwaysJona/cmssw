@@ -40,7 +40,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                     TracksSoACollection<pixelTopology::Phase2>::ConstView tracks_view,
                                     ::vertexFinder::PixelVertexWorkSpaceSoAView ws,
                                     float ptMin) const {
-        printf("clueVertexFinder.dev.cc: Before the for loop in the LoadTracks kernel \n");
+        //printf("clueVertexFinder.dev.cc: Before the for loop in the LoadTracks kernel \n");
         for (auto idx : cms::alpakatools::uniform_elements(acc, tracks_view.nTracks())) {
           auto pt = tracks_view[idx].pt();
           if (pt < ptMin)
@@ -50,7 +50,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           ws[it].zt() = reco::zip(tracks_view, idx);
           ws[it].ptt2() = pt * pt;
         }
-        printf("clueVertexFinder.dev.cc: After the for loop in the LoadTracks kernel \n");
+        //printf("clueVertexFinder.dev.cc: After the for loop in the LoadTracks kernel \n");
       }
     };  // LoadTracks
 

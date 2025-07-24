@@ -177,7 +177,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         std::cout << "coords.size() and results.size() = " << coords.size() << " " << results.size() << std::endl;
         std::cout << __LINE__ << std::endl;
         clueVertexFinder::Producer clusterer(m_dc, m_rhoc, m_dm, m_pPBin, m_wtAvg);
-        clusterer.makeClusters(coords, results, queue, trueTracks);
+        // ************TRYING TO LOAD DATA INTO WORKSPACE************
+        std::cout << "Before calling makeAsync\n";
+        clusterer.makeAsync(queue, tracks_d_view, maxVertices, ptMin_);
+        std::cout << "After calling makeAsync\n";
+        // THIS PART WORKS
+        /*clusterer.makeClusters(coords, results, queue, trueTracks);
 
         std::cout << __LINE__ << std::endl;
         auto myClusters = std::span<const int>{results.data(), trueTracks};
@@ -190,7 +195,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         int nClusters = *(std::max_element(myClusters.begin(), myClusters.end())) + 1;
         std::cout << "nClusters = " << nClusters << std::endl;
         std::vector<int> clusterCount(nClusters);  // need this to calculate averages later
-        std::cout << __LINE__ << std::endl;
+        std::cout << __LINE__ << std::endl;*/
       } else {
         std::cout << "No tracks have pt greater than ptMin_ \n";
       }
